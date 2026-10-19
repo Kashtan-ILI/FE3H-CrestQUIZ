@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="only light">
+<meta name="darkreader-lock">
 <title>紋章クイズ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +13,7 @@
 :root{
   --bg:#e6d6b4; --bg2:#efe3c6; --ink:#3a2a1c; --dim:#7a6449; --line:#b39a72;
   --gold:#8e3324; --ok:#3d7346; --ng:#a8322a; --tile:rgba(248,238,210,.55);
-  color-scheme:light; box-sizing:border-box;
+  color-scheme:only light; box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 :root[data-theme="light"],:root[data-theme="dark"]{ --bg:#e6d6b4; --bg2:#efe3c6; --ink:#3a2a1c; --dim:#7a6449; --line:#b39a72;
@@ -87,6 +89,7 @@ button:focus-visible,.filebtn:focus-within,input:focus-visible{outline:2px solid
 .attack{background:#2e4f57;border-color:#2e4f57;color:#f3ead2;font-weight:700;width:100%;min-height:64px;font-size:1.05rem}
 .attack small{display:block;font-weight:400;font-size:.78rem;color:var(--dim)}
 .best{text-align:left;color:var(--dim);font-size:.85rem;margin:4px 0 0;min-height:1.2em}
+.again{width:100%;margin-top:10px}
 .xshare{display:flex;align-items:center;justify-content:center;min-height:48px;margin-top:22px;border-radius:10px;background:#1c1712;color:#f6ecd6;text-decoration:none;font-weight:700}
 .xshare:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .ravg{display:block;margin-top:4px;font-size:.88rem;color:var(--dim);font-family:"Zen Kaku Gothic New",sans-serif;letter-spacing:.04em}
@@ -128,6 +131,9 @@ h1::after{content:"";display:block;width:56px;height:1px;background:var(--gold);
 .zno{display:block;font-size:.68rem;color:var(--dim);text-align:left}
 .zname{display:block;font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:clamp(.7rem,3.4vw,.92rem);white-space:nowrap;letter-spacing:-.02em;margin-top:2px}
 .zchar{display:block;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#quiz,#result,#zukan,.mark{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#quiz img,#result img,#zukan img,.mark img,dialog img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
+.mark:focus,.mark:focus-visible{outline:none}
 .mark{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(240,228,196,.78);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .msym{font-size:min(62vw,300px);line-height:1;font-weight:700;font-family:"Zen Maru Gothic",sans-serif}
 .isok .msym{color:var(--ok)} .isng .msym{color:var(--ng)}
@@ -167,6 +173,10 @@ body.cover .rules{background:#efe2c2;color:#3a2a1c;border:2px solid #6b1414}
 body.cover .best{color:#6b1414;font-weight:700}
 body.cover #start{box-shadow:0 0 0 4px #2a170d,0 0 0 6px #dcb767}
 
+.backTL{position:absolute;top:10px;left:12px;z-index:5;display:flex;align-items:center;gap:4px;min-height:36px;padding:4px 12px 4px 8px;font-size:.85rem;background:#efe2c2;border:1px solid var(--line);border-radius:999px;color:var(--ink)}
+.backTL span:first-child{font-size:1.2rem;line-height:1}
+main{padding-top:52px}
+body.cover main{padding-top:20px}
 .colophon{margin:34px 0 8px;padding-top:14px;border-top:1px solid rgba(214,174,98,.45);text-align:center;font-size:.7rem;line-height:1.7;color:#cbb88f}
 .colophon p{margin:0 0 6px}
 .colophon .ver{margin-top:10px;letter-spacing:.06em;color:#dcb767}
@@ -204,6 +214,7 @@ main.turnOut{animation:coverOpen .5s ease-in forwards;transform-origin:left cent
 </head>
 <body>
 <main>
+  <button class="backTL hidden" id="backTL"><span aria-hidden="true">‹</span> <span id="backLbl">表紙に戻る</span></button>
   <h1>紋章クイズ</h1>
 
   <!-- 画像読み込み -->
@@ -246,7 +257,7 @@ main.turnOut{animation:coverOpen .5s ease-in forwards;transform-origin:left cent
 
   <!-- 図鑑 -->
   <section id="zukan" class="hidden">
-    <div class="zhead"><h2>紋章図鑑</h2><button class="zback" id="zBackTop">表紙に戻る</button></div>
+    <h2>紋章図鑑</h2>
     <div class="chips" id="symChips">
       <button data-v="" aria-pressed="true">すべて</button>
       <button data-v="左右対称" aria-pressed="false">左右対称</button>
@@ -255,7 +266,6 @@ main.turnOut{animation:coverOpen .5s ease-in forwards;transform-origin:left cent
       <button data-v="4方向対称" aria-pressed="false">4方向対称</button>
     </div>
     <div class="zgrid" id="zgrid"></div>
-    <button class="zback wide" id="zBack">表紙に戻る</button>
   </section>
   <dialog id="zdlg">
     <img id="dImg" alt="">
@@ -273,7 +283,6 @@ main.turnOut{animation:coverOpen .5s ease-in forwards;transform-origin:left cent
     <div id="answerArea"></div>
     <div class="verdict" id="verdict"></div>
     <div id="mark" class="mark hidden" role="button" tabindex="0" aria-live="assertive"><div id="markSym" class="msym"></div><div id="markText" class="mtext"></div><div class="mhint" id="markHint"></div></div>
-    <button class="link" id="quit">やめる</button>
   </section>
 
   <!-- 結果 -->
@@ -287,10 +296,7 @@ main.turnOut{animation:coverOpen .5s ease-in forwards;transform-origin:left cent
     <h2 id="hitHead">できた紋章</h2>
     <div class="miss" id="hitList"></div>
     <a class="xshare" id="xShare" target="_blank" rel="noopener">Xで結果をポスト</a>
-    <div class="row2">
-      <button id="again">もう一回</button>
-      <button id="toMenu">メニューへ</button>
-    </div>
+    <button id="again" class="again">もう一回</button>
   </section>
 </main>
 <div id="fx" aria-hidden="true"></div>
@@ -313,7 +319,7 @@ let st={mode:"n2c",diff:"easy",count:"10"};
 let weak={}; try{weak=JSON.parse(localStorage.getItem("crestWeak")||"{}")}catch(e){}
 
 const $=id=>document.getElementById(id);
-function show(id){["menu","zukan","quiz","result"].forEach(s=>$(s).classList.toggle("hidden",s!==id));document.body.classList.toggle("cover",id==="menu");window.scrollTo(0,0)}
+function show(id){["menu","zukan","quiz","result"].forEach(s=>$(s).classList.toggle("hidden",s!==id));document.body.classList.toggle("cover",id==="menu");$("backTL").classList.toggle("hidden",id==="menu");$("backLbl").textContent=id==="quiz"?"やめる":"表紙に戻る";window.scrollTo(0,0)}
 
 const ready=()=>icons.map((u,i)=>u?i:-1).filter(i=>i>=0);
 function renderPreview(){$("start").disabled=false;$("start").textContent=st.diff==="attack"?"開始":"はじめる"}
@@ -353,8 +359,6 @@ $("start").onclick=start;
 $("again").onclick=()=>{st={...lastSet};start()};
 let menuSt=null;
 function backMenu(){if(st.attack&&menuSt)st=menuSt;showBest();weakBtn();show("menu")}
-$("toMenu").onclick=backMenu;
-$("quit").onclick=()=>{clearInterval(timerId);backMenu()};
 const getBest=()=>{try{return +localStorage.getItem("crestBest3")||0}catch(e){return 0}};
 function showBest(){const b=getBest();$("bestLine").textContent=b?`自己ベスト ${b} pt`:""}
 showBest();
@@ -378,9 +382,9 @@ function ask(){
   if(q.type==="n2c"){
     $("prompt").innerHTML=`<div class="name">${NAMES[q.a]}</div>`;
     $("qtext").textContent="この紋章はどれ？";
-    A.innerHTML=`<div class="choices imgs ${D.n===8?"n8":""}">`+opts.map(i=>`<button data-i="${i}" aria-label="選択肢"><img src="${icons[i]}" alt=""></button>`).join("")+"</div>";
+    A.innerHTML=`<div class="choices imgs ${D.n===8?"n8":""}">`+opts.map(i=>`<button data-i="${i}" aria-label="選択肢"><img draggable="false" src="${icons[i]}" alt=""></button>`).join("")+"</div>";
   }else{
-    $("prompt").innerHTML=`<img src="${icons[q.a]}" alt="出題の紋章">`;
+    $("prompt").innerHTML=`<img draggable="false" src="${icons[q.a]}" alt="出題の紋章">`;
     $("qtext").textContent="この紋章の名前は？";
     if(D.typed){
       A.innerHTML=`<div class="typed"><input id="ans" autocomplete="off" autocapitalize="off" placeholder="カタカナで入力" enterkeyhint="done"><button id="send">決定</button></div>`;
@@ -477,7 +481,7 @@ function finish(){
   $("xShare").href="https://twitter.com/intent/tweet?text="+encodeURIComponent(lines.join("\n"));
   const u=[...new Set(miss)];
   $("missHead").classList.toggle("hidden",!u.length);
-  const fig=i=>`<figure><img src="${icons[i]}" alt=""><figcaption>${NAMES[i]}</figcaption></figure>`;
+  const fig=i=>`<figure><img draggable="false" src="${icons[i]}" alt=""><figcaption>${NAMES[i]}</figcaption></figure>`;
   $("missList").innerHTML=u.map(fig).join("");
   const h=[...new Set(hit)].filter(i=>!u.includes(i));
   $("hitHead").classList.toggle("hidden",!h.length);
@@ -487,7 +491,7 @@ function finish(){
 /* ---------- 図鑑 ---------- */
 const SYM={"ゴネリル":"点対称","ゴーティエ":"点対称","リーガン":"上下対称","ブレーダッド":"4方向対称"};
 const sym=i=>SYM[NAMES[i]]||"左右対称";
-const CHARS={"エルネスト": "", "マクイル": "", "セイロス": "レア、エーデルガルト、ジェラルト", "ドミニク": "アネット", "フラルダリウス": "フェリクス、ロドリグ", "ノア": "コンスタンツェ", "セスリーン": "フレン、リンハルト", "ダフネル": "イングリット", "ブレーダッド": "ディミトリ", "グロスタール": "ローレンツ、リシテア", "ゴネリル": "ヒルダ", "キッホル": "セテス、フェルディナント", "オーバン": "ユーリス", "ゴーティエ": "シルヴァン", "インデッハ": "ベルナデッタ、ハンネマン", "獣": "マリアンヌ", "カロン": "カトリーヌ、リシテア", "ティモテ": "ハピ", "リーガン": "クロード", "シュヴァリエ": "バルタザール", "ラミーヌ": "メルセデス、イエリッツァ", "炎の紋章": "ベレト／ベレス、エーデルガルト"};
+const CHARS={"エルネスト": "アンナ", "マクイル": "", "セイロス": "レア、エーデルガルト、ジェラルト", "ドミニク": "アネット", "フラルダリウス": "フェリクス、ロドリグ", "ノア": "コンスタンツェ", "セスリーン": "フレン、リンハルト", "ダフネル": "イングリット", "ブレーダッド": "ディミトリ", "グロスタール": "ローレンツ、リシテア", "ゴネリル": "ヒルダ", "キッホル": "セテス、フェルディナント", "オーバン": "ユーリス", "ゴーティエ": "シルヴァン", "インデッハ": "ベルナデッタ、ハンネマン", "獣": "マリアンヌ", "カロン": "カトリーヌ、リシテア", "ティモテ": "ハピ", "リーガン": "クロード", "シュヴァリエ": "バルタザール", "ラミーヌ": "メルセデス、イエリッツァ", "炎の紋章": "ベレト／ベレス、エーデルガルト"};
 let charEdit={};try{charEdit=JSON.parse(localStorage.getItem("crestChars")||"{}")}catch(e){}
 const holders=i=>(NAMES[i] in charEdit?charEdit[NAMES[i]]:CHARS[NAMES[i]])||"";
 
@@ -498,7 +502,7 @@ const recText=i=>{const r=rec[i];return r&&r[1]?`${r[0]} / ${r[1]} 回正解（$
 function renderZukan(){
   zList=NAMES.map((_,i)=>i).filter(i=>!zFilter||sym(i)===zFilter);
   $("zgrid").innerHTML=zList.map(i=>{const r=rec[i];
-    return `<button class="zcard" data-i="${i}"><span class="zno">No.${pad(i)}</span>${icons[i]?`<img src="${icons[i]}" alt="">`:`<div class="empty" style="aspect-ratio:1"></div>`}<span class="zname">${NAMES[i]}</span><span class="zchar">${holders(i).split("、")[0]||"―"}${holders(i).includes("、")?" ほか":""}</span></button>`}).join("");
+    return `<button class="zcard" data-i="${i}"><span class="zno">No.${pad(i)}</span>${icons[i]?`<img draggable="false" src="${icons[i]}" alt="">`:`<div class="empty" style="aspect-ratio:1"></div>`}<span class="zname">${NAMES[i]}</span><span class="zchar">${holders(i).split("、")[0]||"―"}${holders(i).includes("、")?" ほか":""}</span></button>`}).join("");
   $("zgrid").querySelectorAll(".zcard").forEach(b=>b.onclick=()=>openDetail(zList.indexOf(+b.dataset.i)))}
 function openDetail(k){zCur=k;const i=zList[k];
   $("dImg").src=icons[i]||"";$("dName").textContent=NAMES[i];$("dNo").textContent="No."+pad(i);
@@ -520,7 +524,7 @@ $("openZukan").onclick=()=>{
   setTimeout(()=>{m.classList.remove("turnOut");renderZukan();show("zukan")},turn+150);
   setTimeout(()=>{fx.classList.remove("on");fxBusy=false},turn+150+500);
 };
-$("zBack").onclick=$("zBackTop").onclick=()=>show("menu");
+$("backTL").onclick=()=>{const cur=["zukan","quiz","result"].find(id=>!$(id).classList.contains("hidden"));if(cur==="quiz"){clearInterval(timerId);$("mark").classList.add("hidden")}if(cur==="zukan")show("menu");else backMenu()};
 
 /* ---------- 起動時：保存がなければ自作の紋章を使う ---------- */
 icons=BUILTIN.slice();renderPreview();show("menu");
